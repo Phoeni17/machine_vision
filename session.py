@@ -1,29 +1,44 @@
 import json
 import os
 
-SESSION_FILE = "pushup_sessions.json"
+SESSION_FILE = "exercise_sessions.json"  # single file for all exercises
 
 
 def load_sessions():
-    """Load past pushup sessions from file."""
+    """Load past sessions from JSON file."""
     if not os.path.exists(SESSION_FILE):
-        return []
+        # initialize empty structure
+        return {"pushups": [], "squats": []}
     try:
         with open(SESSION_FILE, "r") as f:
-            return json.load(f)
-    except:
-        return []
+            data = json.load(f)
+            if "pushups" not in data:
+                data["pushups"] = []
+            if "squats" not in data:
+                data["squats"] = []
+            return data
+    except (json.JSONDecodeError, FileNotFoundError):
+        return {"pushups": [], "squats": []}
 
 
-def save_session(pushups_done):
-    """Save a new pushup session with total pushups."""
-    sessions = load_sessions()
-    sessions.append({"pushups": pushups_done})
+def save_session(count, exercise="pushup"):
+    """Save a new session for pushups or squats."""
+    data = load_sessions()
+    if exercise == "pushup":
+        data["pushups"].append(count)
+    elif exercise == "squat":
+        data["squats"].append(count)
     with open(SESSION_FILE, "w") as f:
-        json.dump(sessions, f, indent=4)
+        json.dump(data, f, indent=4)
 
 
 def get_total_pushups():
     """Return total pushups across all sessions."""
-    sessions = load_sessions()
-    return sum(s["pushups"] for s in sessions)
+    data = load_sessions()
+    return sum(data.get("pushups", []))
+
+
+def get_total_squats():
+    """Return total squats across all sessions."""
+    data = load_sessions()
+    return sum(data.get("squats", []))
